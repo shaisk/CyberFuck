@@ -12,7 +12,7 @@ public class Interface : MonoBehaviour
     private SmoothCamera sc;
     public int coinsTarget3 = 5; 
     public int coinsTarget2 = 3; 
-    public int coinsTarget1 = 1; //dont forget to change!!!
+    public int coinsTarget1 = 1; 
     public Image[] Stars;
     public GameObject[] cars;
     private bool isPaused = false;
@@ -109,6 +109,13 @@ public class Interface : MonoBehaviour
         PausePanel.SetActive(false);
         Time.timeScale = 1;
         isPaused = false;
+    }
+
+    public void Restart()
+    {
+        Time.timeScale = 1;
+        Scene scene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(scene.name);
     }
 
     public void goToMenu()

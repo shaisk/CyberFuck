@@ -117,14 +117,14 @@ public class Menu : MonoBehaviour
     {
         string[] carforT = data.t[carForT].Split(del);
         int updateState = int.Parse(carforT[carPart]) + 1;
-        if (updateState <= 3 && 5 * updateState <= data.coins)
+        if (updateState <= 6 && 5 * updateState <= data.coins)
         {
             carforT[carPart] = updateState.ToString();
             data.t[carForT] = carforT[0] + "f" + carforT[1] + "f" + carforT[2];           
             data.coins -= 5 * updateState;            
         }
 
-        if (int.Parse(carforT[carPart]) == 3 || STJ.coins < 5 * updateState)
+        if (int.Parse(carforT[carPart]) == 6 || STJ.coins < 5 * updateState)
         {
             updateBttns[carPart].interactable = false;
         }

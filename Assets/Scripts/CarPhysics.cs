@@ -28,15 +28,21 @@ public class CarPhysics : MonoBehaviour
     public Text coinsText;
     public int coinsInt = 0;
     public GameObject fp;
+    public GameObject lp;
+    public GameObject centerMass;
     public GameObject fuelProgressBar;
     private string[] tuning;
     private char del = 'f';
+    public float timeStart = 5f;
+    private int touchedUD;
+    public float timeToLose = 5f;
 
     public Click[] ControlCar;
 
     // Start is called before the first frame update
     void Start()
     {
+        GetComponent<Rigidbody2D>().centerOfMass = centerMass.transform.localPosition;
         wheelJoints = gameObject.GetComponents<WheelJoint2D>();
         backwheel = wheelJoints[1].motor;
         frontWheel = wheelJoints[0].motor;
@@ -51,20 +57,9 @@ public class CarPhysics : MonoBehaviour
             break;
 
             case 1:
-                for (int a = 0; a < int.Parse(tuning[0]); a++)
-                {
-                    maxSpeed -= 400;
-                }
-
-                for (int a = 0; a < int.Parse(tuning[1]); a++)
-                {
-                    brakeforce += 300;
-                }
-
-                for (int a = 0; a < int.Parse(tuning[2]); a++)
-                {
-                    acceleration += 200;
-                }
+                maxSpeed = maxSpeed - 250 * int.Parse(tuning[0]);
+                brakeforce = brakeforce + 100 * int.Parse(tuning[1]);
+                acceleration = acceleration + 100 * int.Parse(tuning[2]);
                 break;                
         }
         currentFuel = fuelSize;
@@ -79,35 +74,44 @@ public class CarPhysics : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if(currentFuel <= 0)
+        if (currentFuel <= 0 || (angleCar <= -50 && angleCar >= 105))
         {
-            print("Закончилось топливо!");
-            return;
+            if (timeToLose > 0)
+            {
+                timeToLose -= Time.deltaTime;
+            }
+            else
+            {
+                lp.SetActive(true);
+            }
         }
+        else timeToLose = 5f;
+
         frontWheel.motorSpeed = backwheel.motorSpeed;
         angleCar = transform.localEulerAngles.z;
         if (angleCar >= 180)
         {
             angleCar = angleCar - 360;
         }
+        print(angleCar);
 
         if (grouned == true)
         {
             if (ControlCar[0].clicked == true)
             {
-                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (acceleration - gravity * Mathf.PI * (angleCar / 2)) * Time.deltaTime, maxSpeed, maxBackSpeed);
+                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (acceleration - gravity * Mathf.PI * (angleCar / 2) * (GetComponent<Rigidbody2D>().velocity.sqrMagnitude * 1.75f)) * Time.fixedDeltaTime, maxSpeed, maxBackSpeed);
                 currentFuel -= fuelUsage * Time.deltaTime;
             }
 
-            else if ((ControlCar[0].clicked == false && backwheel.motorSpeed < 0) || (ControlCar[0].clicked == false && backwheel.motorSpeed == 0 && angleCar < 0))
+            else if ((backwheel.motorSpeed < 0) || (ControlCar[0].clicked == false && backwheel.motorSpeed == 0 && angleCar < 0))
             {
-                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (dacceleration - gravity * Mathf.PI * (angleCar / 2)) * Time.deltaTime, maxSpeed, 0);
+                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (dacceleration - gravity * Mathf.PI * (angleCar / 2)) * Time.fixedDeltaTime, maxSpeed, 0);
                 currentFuel -= (fuelUsage / 2.5f) * Time.deltaTime;
             }
 
             if ((ControlCar[0].clicked == false && backwheel.motorSpeed > 0) || (ControlCar[0].clicked == false && backwheel.motorSpeed == 0 && angleCar > 0))
             {
-                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (-dacceleration - gravity * Mathf.PI * (angleCar / 2)) * Time.deltaTime, 0, maxBackSpeed);
+                backwheel.motorSpeed = Mathf.Clamp(backwheel.motorSpeed - (-dacceleration - gravity * Mathf.PI * (angleCar / 2)) * Time.fixedDeltaTime, 0, maxBackSpeed);
             }
         }
 
@@ -131,6 +135,21 @@ public class CarPhysics : MonoBehaviour
         wheelJoints[0].motor = frontWheel;
 
         fuelProgressBar.transform.localScale = new Vector2(currentFuel / fuelSize, 1);
+
+        if (touchedUD == 1)
+        {
+            if (timeStart > 0)
+            {
+                timeStart -= Time.deltaTime;
+            }
+            else
+            {
+                maxSpeed = maxSpeed / 4;
+                acceleration = acceleration / 4;
+                touchedUD--;
+                timeStart = 5f;
+            }
+        }
     }
 
     void OnTriggerEnter2D(Collider2D trigger)
@@ -144,11 +163,19 @@ public class CarPhysics : MonoBehaviour
         {
             fp.SetActive(true);
         }
-        
+
         else if (trigger.gameObject.tag == "Fuel")
         {
             currentFuel += fuelAdd;
             Destroy(trigger.gameObject);
+        }
+
+        else if (trigger.gameObject.tag == "Upgrade")
+        {
+             maxSpeed = maxSpeed * 4;
+             acceleration = acceleration * 4;
+             touchedUD++;
+             Destroy(trigger.gameObject);
         }
     }
     void OnDrawGizmos()
