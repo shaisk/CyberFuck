@@ -74,7 +74,7 @@ public class CarPhysics : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (currentFuel <= 0 || (angleCar <= -50 && angleCar >= 105))
+        if (currentFuel <= 0 || ((angleCar <= 130f && angleCar >= -105f) == false))
         {
             if (timeToLose > 0)
             {
@@ -94,6 +94,8 @@ public class CarPhysics : MonoBehaviour
             angleCar = angleCar - 360;
         }
         print(angleCar);
+        print(currentFuel);
+
 
         if (grouned == true)
         {
